@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>DCET Chatbot — Ask & Prepare</title>
+
+<!-- Simple Google font -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#e9f2ff;
+    --card:#f7fbff;
+    --primary:#0d6efd; /* deep blue */
+    --accent:#0456d8;
+    --muted:#6b7280;
+    --bubble-user:linear-gradient(135deg,#0d6efd,#2aa0ff);
+    --bubble-bot:#ffffff;
+    --glass: rgba(255,255,255,0.6);
+    --shadow: 0 6px 18px rgba(13, 110, 253, 0.08);
+  }
+
+  *{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#f0f6ff,var(--bg));color:#0b1320}
+  .app{
+    max-width:980px;margin:0 auto;display:flex;flex-direction:column;height:100vh;padding:12px;
+  }
+
+  /* Header */
+  .header{
+    display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:linear-gradient(90deg,var(--primary),var(--accent));
+    color:white;box-shadow:var(--shadow);
+  }
+  .logo{
+    width:48px;height:48px;border-radius:10px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:700;
+    font-size:18px;
+  }
+  .title h1{margin:0;font-size:16px;font-weight:700}
+  .title p{margin:0;font-size:12px;opacity:0.92}
+
+  /* Chat area */
+  .chat-wrap{
+    flex:1;margin-top:12px;display:flex;flex-direction:column;overflow:hidden;border-radius:12px;
+  }
+  .messages{
+    flex:1;overflow:auto;padding:18px;background:
+      linear-gradient(180deg, rgba(10,48,102,0.02), rgba(7,50,90,0.02));
+    display:flex;flex-direction:column;gap:12px;
+  }
+
+  /* Message bubbles */
+  .msg{display:flex;gap:8px;align-items:flex-end;max-width:95%}
+  .msg.b-user{align-self:flex-end;flex-direction:row-reverse}
+  .avatar{
+    width:36px;height:36px;border-radius:10px;background:var(--glass);display:flex;align-items:center;justify-content:center;color:var(--primary);font-weight:700;font-size:16px;border:1px solid rgba(13,110,253,0.06);
+  }
+  .bubble{
+    padding:10px 14px;border-radius:14px;box-shadow:var(--shadow);line-height:1.35;font-size:14px;
+    max-width:78vw;
+  }
+  .b-user .bubble{
+    background:var(--bubble-user);color:#fff;border-radius:14px 14px 6px 14px;
+  }
+  .b-bot .bubble{
+    background:var(--bubble-bot);color:#071433;border-radius:14px 14px 14px 6px;border:1px solid rgba(7,20,51,0.04);
+  }
+  .meta{font-size:11px;color:var(--muted);margin-top:6px}
+
+  /* Composer */
+  .composer{
+    display:flex;gap:8px;padding:12px;border-radius:12px;margin-top:12px;background:transparent;align-items:center;
+  }
+  .input{
+    flex:1;display:flex;gap:8px;align-items:center;background:var(--card);padding:10px;border-radius:12px;border:1px solid rgba(13,110,253,0.06);
+  }
+  textarea{width:100%;min-height:44px;border:0;outline:none;background:transparent;resize:none;padding:4px;font-size:14px}
+  .btn{
+    background:var(--primary);color:white;padding:10px 14px;border-radius:10px;border:none;font-weight:600;cursor:pointer;box-shadow:0 8px 20px rgba(13,110,253,0.12)
+  }
+  .btn:disabled{opacity:0.6;cursor:default}
+  .small{
+    font-size:12px;color:var(--muted)
+  }
+
+  /* Utilities */
+  .center{text-align:center}
+  .hint{font-size:13px;color:var(--muted);padding:8px}
+  .chip{background:white;padding:6px 10px;border-radius:999px;border:1px solid rgba(7,20,51,0.04);font-size:13px;margin-right:8px;display:inline-block}
+
+  /* Responsive mobile-first */
+  @media(min-width:720px){
+    .app{padding:20px}
+    .logo{width:60px;height:60px;font-size:20px;border-radius:12px}
+    .header{padding:14px}
+    .messages{padding:26px}
+    .bubble{font-size:15px}
+  }
+
+  /* loading spinner */
+  .spinner{
+    width:20px;height:20px;border-radius:50%;border:3px solid rgba(0,0,0,0.08);border-top-color:var(--primary);animation:spin 1s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+  <div class="app" id="app">
+    <div class="header">
+      <div class="logo">DC</div>
+      <div class="title">
+        <h1>DCET Chat — Exam Help</h1>
+        <p>Ask DCET questions — answers based on official docs & notes</p>
+      </div>
+      <div style="margin-left:auto" class="small">Karnataka • Offline-ready</div>
+    </div>
+
+    <div class="chat-wrap">
+      <div class="messages" id="messages" aria-live="polite"></div>
+
+      <div class="composer">
+        <div class="input">
+          <textarea id="input" placeholder="Ask about DCET: syllabus, cutoffs, counseling..." rows="1"></textarea>
+        </div>
+        <button id="sendBtn" class="btn">Send</button>
+      </div>
+    </div>
+
+    <div class="center hint">Tip: Ask like “cutoff for CSE at BMSCE” or “DCET exam pattern”</div>
+  </div>
+
+<script>
+(() => {
+  // CONFIG — change this to your deployed API if needed
+  const API_URL = window.__API_URL__ || "https://dcet-chatbot-api.onrender.com/ask";
+
+  const messagesEl = document.getElementById('messages');
+  const input = document.getElementById('input');
+  const sendBtn = document.getElementById('sendBtn');
+
+  // load history
+  const HISTORY_KEY = "dcet_chat_history_v1";
+  let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+  function saveHistory(){ localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); }
+
+  function renderMessage(item){
+    const el = document.createElement('div');
+    el.className = 'msg ' + (item.role === 'user' ? 'b-user' : 'b-bot');
+    el.innerHTML = `
+      <div class="avatar">${item.role==='user'?'You':'DC'}</div>
+      <div>
+        <div class="bubble">${item.text.replace(/\n/g,'<br/>')}</div>
+        <div class="meta">${new Date(item.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+      </div>
+    `;
+    messagesEl.appendChild(el);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function renderHistory(){
+    messagesEl.innerHTML = '';
+    for(const m of history){ renderMessage(m); }
+  }
+
+  function pushMessage(role, text){
+    const item = { role, text, ts: Date.now() };
+    history.push(item);
+    if(history.length > 50) history.shift();
+    saveHistory();
+    renderMessage(item);
+    return item;
+  }
+
+  function showLoading(){
+    const el = document.createElement('div');
+    el.className = 'msg b-bot loading';
+    el.id = '__loading';
+    el.innerHTML = `<div class="avatar">DC</div><div><div class="bubble"><div class="spinner"></div></div></div>`;
+    messagesEl.appendChild(el);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+  function hideLoading(){ const x=document.getElementById('__loading'); if(x) x.remove(); }
+
+  async function askServer(q){
+    // send POST JSON { "question": "..." }
+    try{
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ question: q })
+      });
+      if(!res.ok){
+        const t = await res.text();
+        throw new Error(`Server ${res.status}: ${t}`);
+      }
+      const j = await res.json();
+      return j.answer || j;
+    }catch(e){
+      console.error(e);
+      return `Error: ${e.message}`;
+    }
+  }
+
+  sendBtn.addEventListener('click', send);
+  input.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); send(); }
+  });
+
+  async function send(){
+    const q = input.value.trim();
+    if(!q) return;
+    input.value = '';
+    input.focus();
+    pushMessage('user', q);
+    sendBtn.disabled = true;
+    showLoading();
+
+    // ask
+    const reply = await askServer(q);
+    hideLoading();
+    pushMessage('bot', reply);
+    sendBtn.disabled = false;
+  }
+
+  // init
+  renderHistory();
+
+  // small UX nicety: focus input on load
+  window.setTimeout(()=> input.focus(), 300);
+
+  // optional: show sample quick chips
+  const chips = document.createElement('div');
+  chips.style.padding='8px 0';
+  chips.innerHTML = '<span class="chip">Exam pattern</span><span class="chip">Cutoff CSE BMSCE</span><span class="chip">Documents required</span>';
+  const header = document.querySelector('.header');
+  header.parentNode.insertBefore(chips, header.nextSibling);
+  chips.querySelectorAll('.chip').forEach(ch=>{
+    ch.addEventListener('click', ()=>{ input.value = ch.textContent; input.focus(); })
+  });
+
+})();
+</script>
+</body>
+</html>
